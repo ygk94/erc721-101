@@ -24,7 +24,7 @@ contract AnimalNFT is ERC721Enumerable {
         _;
     }
 
-    modifier onlyAnimalOwner(uint animalNumber) {
+    modifier onlyAnimalOwner(uint256 animalNumber) {
         require(msg.sender == ownerOf(animalNumber), "Not owner");
         _;
     }
@@ -32,20 +32,20 @@ contract AnimalNFT is ERC721Enumerable {
     struct Animal {
         string name;
         bool wings;
-        uint legs;
-        uint sex;
+        uint256 legs;
+        uint256 sex;
     }
 
-    mapping(uint => Animal) private animallist;
+    mapping(uint256 => Animal) private animallist;
 
     mapping(address => bool) private allowbreeder;
 
-    uint compteur = 1;
+    uint256 compteur = 1;
 
     // ---------------------------------------------------------------
     // Exo 2 / 4 : déclarer un animal (mint)
     // ---------------------------------------------------------------
-    function declareAnimal(uint sex, uint legs, bool wings, string calldata name)
+    function declareAnimal(uint256 sex, uint256 legs, bool wings, string calldata name)
         external
         onlyBreeder
         returns (uint256)
@@ -53,17 +53,17 @@ contract AnimalNFT is ERC721Enumerable {
         return _createAnimal(sex, legs, wings, name);
     }
 
-    function _createAnimal(uint sex, uint legs, bool wings, string calldata name) internal returns (uint256) {
+    function _createAnimal(uint256 sex, uint256 legs, bool wings, string calldata name) internal returns (uint256) {
         compteur += 1;
         _mint(msg.sender, compteur);
         animallist[compteur] = Animal(name, wings, legs, sex);
         return compteur;
     }
 
-    function getAnimalCharacteristics(uint animalNumber)
+    function getAnimalCharacteristics(uint256 animalNumber)
         external
         view
-        returns (string memory _name, bool _wings, uint _legs, uint _sex)
+        returns (string memory _name, bool _wings, uint256 _legs, uint256 _sex)
     {
         Animal storage a = animallist[animalNumber];
         return (a.name, a.wings, a.legs, a.sex);
@@ -72,7 +72,7 @@ contract AnimalNFT is ERC721Enumerable {
     // ---------------------------------------------------------------
     // Exo 3 : enregistrement des breeders
     // ---------------------------------------------------------------
-    uint public registrationPrice = 0.0001 ether;
+    uint256 public registrationPrice = 0.0001 ether;
 
     function registerMeAsBreeder() external payable {
         require(msg.value == registrationPrice, "Wrong price");
@@ -91,7 +91,7 @@ contract AnimalNFT is ERC721Enumerable {
     // ---------------------------------------------------------------
     // Exo 5 : déclarer un animal mort (burn)
     // ---------------------------------------------------------------
-    function declareDeadAnimal(uint animalNumber) external onlyAnimalOwner(animalNumber) {
+    function declareDeadAnimal(uint256 animalNumber) external onlyAnimalOwner(animalNumber) {
         _burn(animalNumber);
         delete animallist[animalNumber];
         delete parents[animalNumber];
@@ -100,23 +100,23 @@ contract AnimalNFT is ERC721Enumerable {
     // ---------------------------------------------------------------
     // Exo 6 : vente
     // ---------------------------------------------------------------
-    mapping(uint => bool) private forSale;
-    mapping(uint => uint) private salePrice;
+    mapping(uint256 => bool) private forSale;
+    mapping(uint256 => uint256) private salePrice;
 
-    function isAnimalForSale(uint animalNumber) external view returns (bool) {
+    function isAnimalForSale(uint256 animalNumber) external view returns (bool) {
         return forSale[animalNumber];
     }
 
-    function animalPrice(uint animalNumber) external view returns (uint256) {
+    function animalPrice(uint256 animalNumber) external view returns (uint256) {
         return salePrice[animalNumber];
     }
 
-    function offerForSale(uint animalNumber, uint price) external onlyAnimalOwner(animalNumber) {
+    function offerForSale(uint256 animalNumber, uint256 price) external onlyAnimalOwner(animalNumber) {
         forSale[animalNumber] = true;
         salePrice[animalNumber] = price;
     }
 
-    function buyAnimal(uint animalNumber) external payable {
+    function buyAnimal(uint256 animalNumber) external payable {
         require(forSale[animalNumber], "Animal not for sale");
         require(msg.value == salePrice[animalNumber], "Wrong price");
         address seller = ownerOf(animalNumber);
@@ -133,18 +133,18 @@ contract AnimalNFT is ERC721Enumerable {
     // Exo 7 : parents et reproduction (évalués par Evaluator2)
     // ---------------------------------------------------------------
     struct Parents {
-        uint parent1;
-        uint parent2;
+        uint256 parent1;
+        uint256 parent2;
     }
 
-    mapping(uint => Parents) private parents;
-    mapping(uint => bool) private reproductionOffered;
-    mapping(uint => uint) private reproPrice;
-    mapping(uint => address) private authorizedBreeder;
+    mapping(uint256 => Parents) private parents;
+    mapping(uint256 => bool) private reproductionOffered;
+    mapping(uint256 => uint256) private reproPrice;
+    mapping(uint256 => address) private authorizedBreeder;
 
     /// On peut utiliser un parent si on le possède, ou si on a payé pour le faire reproduire.
     /// Le droit payé ne sert qu'une seule fois.
-    function _useParent(uint animalNumber) internal {
+    function _useParent(uint256 animalNumber) internal {
         address parentOwner = ownerOf(animalNumber); // revert si l'animal n'existe pas
         if (parentOwner == msg.sender) return;
         require(authorizedBreeder[animalNumber] == msg.sender, "Not allowed to reproduce this animal");
@@ -152,35 +152,35 @@ contract AnimalNFT is ERC721Enumerable {
     }
 
     function declareAnimalWithParents(
-        uint sex,
-        uint legs,
+        uint256 sex,
+        uint256 legs,
         bool wings,
         string calldata name,
-        uint parent1,
-        uint parent2
+        uint256 parent1,
+        uint256 parent2
     ) external onlyBreeder returns (uint256) {
         require(parent1 != parent2, "Same parents");
         _useParent(parent1);
         _useParent(parent2);
 
-        uint id = _createAnimal(sex, legs, wings, name);
+        uint256 id = _createAnimal(sex, legs, wings, name);
         parents[id] = Parents(parent1, parent2);
         return id;
     }
 
-    function getParents(uint animalNumber) external view returns (uint256, uint256) {
+    function getParents(uint256 animalNumber) external view returns (uint256, uint256) {
         return (parents[animalNumber].parent1, parents[animalNumber].parent2);
     }
 
-    function canReproduce(uint animalNumber) external view returns (bool) {
+    function canReproduce(uint256 animalNumber) external view returns (bool) {
         return reproductionOffered[animalNumber];
     }
 
-    function reproductionPrice(uint animalNumber) external view returns (uint256) {
+    function reproductionPrice(uint256 animalNumber) external view returns (uint256) {
         return reproPrice[animalNumber];
     }
 
-    function offerForReproduction(uint animalNumber, uint priceOfReproduction)
+    function offerForReproduction(uint256 animalNumber, uint256 priceOfReproduction)
         external
         onlyAnimalOwner(animalNumber)
         returns (uint256)
@@ -190,11 +190,11 @@ contract AnimalNFT is ERC721Enumerable {
         return animalNumber;
     }
 
-    function authorizedBreederToReproduce(uint animalNumber) external view returns (address) {
+    function authorizedBreederToReproduce(uint256 animalNumber) external view returns (address) {
         return authorizedBreeder[animalNumber];
     }
 
-    function payForReproduction(uint animalNumber) external payable {
+    function payForReproduction(uint256 animalNumber) external payable {
         require(reproductionOffered[animalNumber], "Not available for reproduction");
         require(msg.value == reproPrice[animalNumber], "Wrong price");
 
